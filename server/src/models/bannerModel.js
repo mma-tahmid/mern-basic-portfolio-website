@@ -1,24 +1,19 @@
 const mongoose = require('mongoose')
 
-const navbarSchema = new mongoose.Schema({
+const bannerSchema = new mongoose.Schema({
 
-    menuItems: {
-        type: [{ type: String }],
-        required: true,          // Makes the entire array required
-        // validate: [arrayMinLength, 'At least one menu item is required.']
-    },
-    
+    heading: { type: String,  required: true},
+    subHeading: { type: String,  required: true },
+    paragraph: { type: String, required: true },
     buttonText: { type: String },
     buttonShow: { type: Boolean, default: true },
-    logo: { type: String }
-
 },
 
     { timestamps: true, versionKey: false }
 )
 
-const navbarModels = mongoose.model("navbar", navbarSchema);
-module.exports = navbarModels;
+const bannerModels = mongoose.model("banner", bannerSchema);
+module.exports = bannerModels;
 
 
 // Array (best practice)

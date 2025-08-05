@@ -4,12 +4,17 @@ exports.CreateNavbar = async (req, res) => {
     try {
         const { menuItems, buttonText, buttonShow } = req.body;
 
-        if (!Array.isArray(menuItems) || menuItems.length === 0) {
-            return res.send({ message: "menuItems must be a non-empty array" });
+
+
+        if (!menuItems) {
+            return res.send({ message: "menuItems field is rquired" })
         }
 
+        const convertMenuItemsIntoAnArray = menuItems.split(/\s*,\s*/); // string  Convert to an array
+        //"menuItems": "Home,About,Contact" -----> postman Request output: "menuItems": ["Home","About","Contact"],
+
         const navbar = await navbarModels.create({
-            menuItems,
+            menuItems: convertMenuItemsIntoAnArray,
             buttonText,
             buttonShow
         });
@@ -19,6 +24,7 @@ exports.CreateNavbar = async (req, res) => {
             message: "Navbar created successfully",
             output: navbar,
         });
+
     }
 
     catch (error) {
@@ -47,7 +53,7 @@ exports.GetAllNavbars = async (req, res) => {
 
 // ✅ Get Latest Navbar (for frontend)
 
-exports.getLatestNavbar = async (req, res) => {
+exports.GetLatestNavbar = async (req, res) => {
     try {
         const latestNavbar = await navbarModels.findOne().sort({ createdAt: -1 });
 
@@ -72,18 +78,18 @@ exports.getLatestNavbar = async (req, res) => {
 // ✅ Update Navbar by ID
 
 exports.UpdateNavbar = async (req, res) => {
+
     try {
         const { menuItems, buttonText, buttonShow } = req.body;
 
         const navbarparamsId = req.params.navbarid;
 
-        if (menuItems && (!Array.isArray(menuItems) || menuItems.length === 0)) {
-            // Added the missing parenthesis ^
-            return res.status(400).send({
-                success: false,
-                message: "menuItems must be a non-empty array"
-            });
+        if (!menuItems) {
+            return res.send({ message: "menuItems field is rquired" })
         }
+
+        const convertMenuItemsIntoAnArray = menuItems.split(/\s*,\s*/); // string  Convert to an array
+        //"menuItems": "Home,About,Contact" -----> postman Request output: "menuItems": ["Home","About","Contact"],
 
         // 1. Find the document first
         const navbar = await navbarModels.findById(navbarparamsId);
@@ -96,21 +102,17 @@ exports.UpdateNavbar = async (req, res) => {
         // );
 
         // 2. Manually update fields (only update provided fields)
-        if (menuItems) navbar.menuItems = menuItems;
+        if (menuItems) navbar.menuItems = convertMenuItemsIntoAnArray;
         if (buttonText !== undefined) navbar.buttonText = buttonText;
-        if (buttonShow !== undefined) navbar.buttonShow = buttonShow; 
+        if (buttonShow !== undefined) navbar.buttonShow = buttonShow;
 
         //1.  Checks if buttonText exists in the request body
         // buttonText !== undefined verifies whether the client sent this field.
-        // If the client omits buttonText in the request, it remains unchanged in the database
+        //main-- If the client omits buttonText in the request, it remains unchanged in the database
 
         // 2. Only updates if a new value is provided
-
         // If buttonText was sent (even null or ""), it updates the field.
-
         // If buttonText was not sent (undefined), it skips the update.
-
-
 
 
         const updatedNavbar = await navbar.save();
@@ -120,7 +122,10 @@ exports.UpdateNavbar = async (req, res) => {
             message: "Navbar updated successfully",
             output: updatedNavbar
         });
-    } catch (error) {
+
+    }
+
+    catch (error) {
         console.error(error);
         res.status(500).send({ message: "Error updating navbar", error: error.message });
     }
@@ -128,17 +133,28 @@ exports.UpdateNavbar = async (req, res) => {
 
 
 // ✅ Delete Navbar by ID
-exports.deleteNavbar = async (req, res) => {
+exports.DeleteNavbar = async (req, res) => {
+
     try {
-        const { id } = req.params;
-        const deleted = await Navbar.findByIdAndDelete(id);
+
+        const navbarparamsId = req.params.navbarid;
+
+        const deleted = await navbarModels.findByIdAndDelete(navbarparamsId);
 
         if (!deleted) {
             return res.status(404).json({ message: "Navbar not found" });
         }
 
-        res.status(200).json({ message: "Navbar deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ message: "Error deleting navbar", error: error.message });
+        res.status(200).send({
+            success: true,
+            message: "Navbar deleted successfully"
+        });
+
     }
+
+    catch (error) {
+        res.status(500).send({ message: "Error deleting navbar", error: error.message });
+    }
+
 };
+
