@@ -4,30 +4,53 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import axios from 'axios';
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const NavbarPage = () => {
 
 
     // State Name ----> always match the database model field names
-    let [menuItems, SetMenuItem] = useState("");
-    let [buttonText, SetButtonText] = useState("");
+    let [menuItems, setMenuItems] = useState("");
+    let [buttonText, setButtonText] = useState("");
     let [buttonShow, setButtonShow] = useState(false);
 
 
+
+
+
+    // Load existing navbar (optional)
+    useEffect(() => {
+        const fetchNavbar = async () => {
+            try {
+                const res = await axios.get("/api/v7/navbar/get-latest-navbar");
+                if (res.data.success && res.data.output) {
+                    const navbarResult = res.data.output;
+
+                    setMenuItems(navbarResult.menuItems.join(", "));
+                    setButtonText(navbarResult.buttonText || "");
+                    setButtonShow(navbarResult.buttonShow || false);
+                }
+            } catch (error) {
+                console.error("Failed to load navbar", error);
+            }
+        };
+
+        fetchNavbar();
+    }, []);
+
+
     const [loading, setLoading] = useState(false)
-    const navigate = useNavigate();
+    
 
     const handleMenuItemChange = (e) => {
         //console.log(e.target.value)
-        SetMenuItem(e.target.value)
+        setMenuItems(e.target.value)
     }
 
     const handleButtonTextChange = (e) => {
         //console.log(e.target.value)
-        SetButtonText(e.target.value)
+        setButtonText(e.target.value)
 
     }
 
@@ -39,47 +62,33 @@ const NavbarPage = () => {
 
 
 
-    const handleSubmit = async (event) => {
 
-        event.preventDefault()
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
         try {
+            setLoading(true);
 
-            setLoading(true)
-
-            const response = await axios.post("/api/v7/navbar/create-navbar", { menuItems, buttonText, buttonShow }, {
+            const res = await axios.post("/api/v7/navbar/upsert-navbar", { menuItems, buttonText, buttonShow }, {
                 // withCredentials: true, headers: {
                 //     'Content-Type': 'multipart/form-data',
                 // },
-            })
+            });
 
-            if (response.data.success) {
-
-                //navigate("/supplier-list")
-                toast.success(response.data.message)
-            }
-
-            else {
-                toast.error(response.data.message)
-            }
-
-        }
-
-        catch (error) {
-            console.log(error)
-
-            if (error.response && error.response.status === 400) {
-                toast.error(error.response.data.message); // Error for invalid email 
+            if (res.data.success) {
+                toast.success(res.data.message);
             } else {
-                toast.error(error.message || "Something went wrong. Please try again");
+                toast.error(res.data.message);
             }
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || "Something went wrong");
+        } finally {
+            setLoading(false);
         }
+    };
 
-        finally {
-            setLoading(false)
-        }
 
-    }
 
 
     return (
@@ -166,10 +175,18 @@ const NavbarPage = () => {
 
 
                                 {/* Submit Button - spans both columns */}
-                                <div className="md:col-span-2 !pb-4">
-                                    <Button type="submit" className="w-full">
-                                        Submit
-                                    </Button>
+                                <div className="md:col-span-2 !pb-4 ">
+
+                                    {
+                                        loading ? (<Button disabled type="submit" className="w-full">
+                                            Loading...
+                                        </Button>) : (
+                                            <Button type="submit" className="w-full cursor-pointer">
+                                                Submit
+                                            </Button>
+                                        )
+                                    }
+
                                 </div>
 
                             </form>

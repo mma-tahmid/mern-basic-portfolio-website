@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const NavbarComponent = () => {
 
-    // use find one (just one object)
+    // use find one method in backend (just one object)
     let [navbarData, setNavbarData] = useState({})
 
     useEffect(() => {

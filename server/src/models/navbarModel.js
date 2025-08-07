@@ -2,12 +2,14 @@ const mongoose = require('mongoose')
 
 const navbarSchema = new mongoose.Schema({
 
+    key: { type: String, required: true, unique: true }, // NEW FIELD
+
     menuItems: {
         type: [{ type: String }],
         required: true,          // Makes the entire array required
         // validate: [arrayMinLength, 'At least one menu item is required.']
     },
-    
+
     buttonText: { type: String },
     buttonShow: { type: Boolean, default: true },
     logo: { type: String }
